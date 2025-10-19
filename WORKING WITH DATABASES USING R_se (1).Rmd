@@ -1,0 +1,565 @@
+---
+title: "WORKING WITH DATABASES USING R SLOT 5,6,7"
+output: html_notebook
+Edit: Ms Nguyen Xuan Huy - FPTU HCM
+---
+
+BÀI THỰC HÀNH LÀM VIỆC VỚI CƠ SỞ DỮ LIỆU VỚI R
+(THỰC HÀNH TRÊN SQLite)
+
+
+I. cài đặt thư viện và kết nối đến cơ sở dữ liệu
+1. Cài đặt gói cần thiết
+```{r}
+install.packages("dplyr")
+install.packages("RSQLite")
+
+```
+
+2.  Chạy thư viện và tạo kết nối
+
+```{r}
+# Tạo kết nối đến cơ sở dữ liệu SQLite
+library(dplyr)
+library(RSQLite)
+
+```
+```{r}
+conn <- DBI:: dbConnect(RSQLite:: SQLite(),"C:\\Users\\EmBeLenTHeo\\Downloads\\chinook.db")
+#ktra
+if (!is.null(conn)) {
+  message("ok") 
+} else {
+  message("k ok")
+}
+```
+
+3. Truy vấn xem ds các bảng:
+```{r}
+# Truy vấn để lấy thông tin về các bảng trong cơ sở dữ liệu SQLite
+query <- "SELECT name FROM sqlite_master WHERE type='table'"
+
+# Thực hiện truy vấn
+result <- dbGetQuery(conn,query)
+
+# In kết quả
+print(result)
+
+```
+
+
+chú ý: lệnh SHOW TABLES không được hỗ trợ trong SQLite. Thay vào đó, sử dụng bảng sqlite_master trong cơ sở dữ liệu để lấy thông tin về các bảng.
+
+II. THAO TÁC TRÊN CÁC BẢNG TRONG CƠ SỞ DỮ LIỆU
+
+1. Tạo bảng mới và thêm dữ liệu cho bảng mới,
+
+```{r}
+
+# Tạo bảng trong cơ sở dữ liệu và thêm dữ liệu vào bảng
+DBI::dbWriteTable(conn, "nhan_vien", data.frame(
+  CustomerId = 1:5,
+  FirstName = c("Nguyễn XUân", "Đường trân", "Khiếu hoàng", "Chu Thị", "Nguyễn văn"),
+  Company = c("FPTU HCM", "Thép Quốc Thái", "VCB HCM", "HUTECH", "An Khang"),
+  LastName = c("Huy", "Toàn", "Lâm", "Nhường", "Hòa"),
+  Address = c("Phú Hữu", "Nam Long", "Thủ ĐỨc", "Thủ ĐỨc", "HCM"),
+  City = c("Thủ ĐỨc", "Long An", "Biên Hòa", "Thủ Dầu 1", "Trảng Bàng"),
+  State = c("Đồng Nai", "Long An", "Đồng nai", "HCM", "Tây Ninh"),
+  Title = c("Giảng viên", "Tổng GĐ", "Nhân viên", "nhân viên kế toán", "kinh doanh"),
+  PostalCode = c("7000000", "6000000", "5000000", "7000010", "6000000"),
+  Phone = c("078566433435", "0644572242", "0947845454", "08723112121", "0721242545454"),
+  Fax = c("078566433435", "0644572242", "0947845454", "08723112121", "0721242545454"),
+  Email = c("Huy@gmail.com", "Toan@gmail.com", "lam@gmail.com", "nhuong@gmail.com", "hoa@gmail.com"),
+  SupportRepId = 1:5
+), overwrite = TRUE)
+
+```
+
+Lưu ý: 
+append = TRUE dữ liệu sẽ được thêm vào cuối bảng, không thay thế dữ liệu đã có.
+row.names = FALSE không bao gồm chỉ mục hàng khi thêm dữ liệu vào bảng.
+
+--------------------------------------------------------------------
+2. Kiểm tra dữ liệu trong 1 bảng
+```{r}
+# Kiểm tra dữ liệu của bảng
+result <- dbGetQuery(conn, "SELECT * FROM customers")
+print(result)
+```
+
+3. Thêm dữ liệu vào bảng nhan_vien
+
+```{r}
+# Lấy một số ngẫu nhiên từ 1 đến 100
+random_customer_id <- sample(1:100, 1)
+random_SupportRep_Id <- sample(1:5, 1)
+
+# Dữ liệu muốn thêm vào bảng
+
+# Thêm dữ liệu vào bảng trong cơ sở dữ liệu SQLite
+
+
+```
+
+4. Truy vấn xem thông tin dữ liệu của 1 bảng
+
+```{r}
+# Truy vấn dữ liệu từ bảng invoices
+invoices_query <- "SELECT * FROM invoices"
+invoices_data <- dbGetQuery(conn, invoices_query)
+
+# Hiển thị thông tin bảng invoices
+print(invoices_query)
+print(invoices_data)
+```
+
+
+```{r}
+albums_query <- "SELECT * FROM invoices"
+albums_data <- dbGetQuery(conn, albums_query)
+
+# Hiển thị thông tin bảng invoices
+print(albums_query)
+print(albums_data)
+```
+```{r}
+#ktra tt khach hang
+customers_query <- "SELECT FirstName, LastName, Email FROM customers "
+customers_data <- dbGetQuery(conn, customers_query)
+
+print(customers_query)
+print(customers_data)
+```
+
+```{r}
+#ktra so luong ban ghi
+nrow(albums_data)
+```
+```{r}
+#ktra cau truc
+str(albums_data)
+```
+```{r}
+#ktra tt tom tat
+summary(customers_data)
+
+
+```
+```{r}
+#in gtri trung lap
+duplicated_value <- albums_data$Albums[duplicated(albums_data$AlbumsId)]
+print(duplicated_value)
+```
+```{r}
+#xu li NA
+cleaned_customers <- na.omit(customers_data)
+print(cleaned_customers)
+```
+```{r}
+#chuyen doi kieu du lieu
+cleaned_customers$Email <- as.character(cleaned_customers$Email)
+print(cleaned_customers$Email)
+
+```
+Top 10 nsi co nhieu albums nhat
+```{r}
+query <- "
+SELECT 
+  artists.ArtistId,
+  artists.Name as ArtistName,
+  COUNT( albums.AlbumId) as AlbumCount
+FROM artists
+JOIN albums on artists.ArtistId = albums.ArtistId
+GROUP BY artists.ArtistId, artists.Name
+"
+```
+```{r}
+artist_album_counts <- dbGetQuery(conn, query)
+head(artist_album_counts)
+```
+```{r}
+top_artists <- artist_album_counts %>%
+  top_n(10, AlbumCount) %>%
+  arrange(desc(AlbumCount))
+top_artists
+```
+histogram phan so album cua nsi
+```{r}
+ggplot(artist_album_counts, aes(x= AlbumCount)) +
+  geom_histogram(binwidth = 1, fill = "steelblue", color = "white") +
+  labs(
+    title = " pbo sl album giua cac nsi",
+    x = " sl album",
+    y = " sl nsi"
+  ) + 
+  theme_minimal()
+```
+
+```{r}
+library(DBI)
+library( RSQLite)
+
+conn <- dbConnect(RSQLite :: SQLite(), "C:\\Users\\EmBeLenTHeo\\Downloads\\chinook.db")
+monthly_data_query <- "
+SELECT strftime('%Y - %m', InvoiceDate) as Month,
+        SUM(Total) as Revenue
+FROM Invoices
+GROUP BY Month
+ORDER BY Month"
+monthly_data <- dbGetQuery(conn, monthly_data_query)
+print(head(monthly_data))
+#tinh toan theo doanh thu luy ke
+monthly_data$RunningTotal <- cumsum(monthly_data$Revenue)
+
+print(monthly_data)
+```
+
+```{r}
+library(ggplot2)
+
+#chuyen doi dinh dang ngay
+monthly_data <- monthly_data %>%
+  mutate(
+    Month = gsub(" ", "", Month),           # bỏ khoảng trắng: "2009 - 01" -> "2009-01"
+    Month = as.Date(paste0(Month, "-01"),   # thêm ngày đầu tháng
+                    format = "%Y-%m-%d")
+  )
+# bieu do
+ggplot(monthly_data, aes(x = Month, y = RunningTotal)) +
+  geom_line(color = "red", size = 1.2) +
+  geom_point(color = "darkred", size = 2) +
+  labs(
+    title = " doanh thu luy ke theo thang",
+    x = "thang",
+    y = " tong doanh thu"
+  )+
+  theme_minimal()
+```
+dthu thang 2
+```{r}
+ggplot(monthly_data, aes(x = Month)) +
+  geom_col(aes(y = Revenue),fill = "skyblue", alpha = 0.6) +
+  geom_line(aes(y = RunningTotal),color = "darkred", size = 1.2) +
+  labs(
+    title = " doanh thu luy ke theo thang2",
+    x = "thang",
+    y = " tong doanh thu"
+  )+
+  theme_minimal()
+```
+tim kiem xu huong trend analysis
+```{r}
+monthly_orders_query <- "
+SELECT strftime('%Y- %m', InvoiceDate) as Month,
+        COUNT(InvoiceId) as OrderCount
+FROM invoices
+GROUP BY Month
+ORDER BY Month
+"
+monthly_orders_data <- dbGetQuery(conn, monthly_orders_query)
+print(monthly_orders_data)
+```
+29. ghep cot
+```{r}
+print(invoices_data)
+#tao cot moi billing local ket hop data 2 cot
+invoices_data <- invoices_data %>%
+  # mutate() them cot hoac thay doi cot trong df
+  # paste() ghep cac gtri tu cac cot
+  mutate(BillingLocal = paste(BillingAddress, BillingCity, sep = ", "))
+invoices_data
+```
+30.them cot
+```{r}
+# them cot note vao bang invoice
+dbExecute(conn, " ALTER TABLE invoices ADD COLUMN Ghi_Chu TEXT")
+
+#ktra du lieu sau khi add
+results <- dbGetQuery(conn, "SELECT * FROM invoices")
+print(results)
+```
+31.doi ten
+```{r}
+dbExecute(conn, "ALTER TABLE invoices RENAME COLUMN Ghi_Chu To Notes")
+
+results <- dbGetQuery(conn, "SELECT * FROM invoices")
+print(results)
+```
+32. xoa cot
+```{r}
+dbExecute(conn, "ALTER TABLE invoices DROP COLUMN Notes")
+#ktra cau truc sau khi xoa cot 
+results <- dbGetQuery(conn, "PRAGMA table_info('invoices')")
+print(results)
+```
+33. tinh total cho cot
+```{r}
+invoices_data <- tbl(conn, "invoices")
+
+#tinh sum cho cot total theo nhom
+```
+{r}
+#dong ket noi
+DBI :: dbDisconnect(conn)
+
+5 Lọc các hàng có giá trị trong cột "Total" lớn hơn 15.
+
+```{r}
+# Lọc các hàng có giá trị trong cột Total lớn hơn 15
+total_query <- "SELECT * FROM Total where Total > 15"
+total_data <- dbConnect(conn, total_query)
+
+# In kết quả
+print(total_query)
+print(total_data)
+
+#Toán tử pipe %>%, được gọi là "toán tử chuyển tiếp" hoặc "toán tử chuỗi". Nó cho phép chuyển đổi tuần tự dữ liệu từ trái sang phải. Dữ liệu từ invoices_data sẽ được chuyển tới hàm filter() với điều kiện Total > 15 (invoices_data_filtered <- invoices_data %>% filter(Total > 15))
+```
+
+
+6. Sắp xếp dữ liệu theo cột "BillingCountry" và cột "Total" giảm dần.
+
+
+```{r}
+# Sắp xếp theo nhóm và giá trị trong cột total giảm dần
+
+
+```
+7. Tóm tắt giá trị trung bình của cột "Total" cho mỗi nhóm trong cột "BillingCountry".
+
+```{r}
+# Tóm tắt các giá trị trung bình của cột total cho mỗi nhóm trong cột BillingCountry
+
+```
+
+
+8. Tạo cột mới "BillingLocal" kết hợp dữ liệu từ cột "BillingAddress" và "BillingCity".
+
+```{r}
+
+# In kết quả
+
+
+# Tạo cột mới Billing local kết hợp dữ liệu 2 cột BillingAddress và BillingCity
+
+  
+  # mutate(): Hàm này thực hiện việc thêm hoặc thay đổi cột trong dataframe
+  # paste() được sử dụng để kết hợp (ghép) các giá trị từ các cột
+  
+ 
+```
+9. Loại bỏ các hàng trùng lặp.
+
+```{r}
+# Kiểm tra dữ liệu của bảng
+
+```
+loại bỏ dòng trùng lặp
+```{r}
+# Thực thi câu lệnh SQL DELETE
+
+
+```
+kiểm tra lại dữ liệu cột
+```{r}
+
+# Kiểm tra dữ liệu của bảng
+result <- dbGetQuery(conn, "SELECT * FROM nhan_vien")
+print(result)
+
+
+```
+
+
+10.Thêm cột ghi chú vào bảng
+
+thêm một cột mới vào bảng invoices cần thực hiện hai bước chính:
+- Sử dụng câu lệnh SQL ALTER TABLE để thêm cột mới.
+- Cập nhật dữ liệu cho cột mới (nếu cần) sử dụng câu lệnh SQL UPDATE
+
+```{r}
+# Thêm cột mới "Ghi_chu" vào bảng "invoices"
+
+
+# Kiểm tra dữ liệu của bảng "invoices" sau khi thêm cột mới
+
+```
+
+
+11. Đổi tên cột "Ghi_chu" thành "Notes".
+
+
+```{r}
+# Sử dụng lệnh ALTER TABLE để đổi tên cột
+
+# Hiển thị kết quả sau khi đổi tên cột
+
+
+```
+
+
+12. XÓa tên cột Notes
+
+```{r}
+# Sử dụng lệnh ALTER TABLE để xóa cột Notes
+
+
+# Kiểm tra lại cấu trúc của bảng invoices sau khi xóa cột Notes
+
+
+```
+
+13.thực hiện lọc ra những dòng có cột null hoặc NA trong cột BillingPostalCode, thực hiện tạo cột mới tên là payment, thực hiện thêm dữ liệu tự động cho cột payment là "pay in cash"  và in ra kết quả
+
+```{r}
+
+# Truy vấn dữ liệu từ bảng invoices
+
+
+# Lọc ra các dòng có giá trị null hoặc NA trong cột BillingPostalCode
+
+# In ra kết quả
+print(filtered_data)
+```
+
+```{r}
+# Thêm cột mới "payment" với giá trị mặc định "pay in cash"
+
+```
+
+lệnh filtered_data là dataframe chỉ chứa các dòng có giá trị null hoặc rỗng trong cột "BillingPostalCode". 
+Sử dụng hàm mutate() để thêm cột mới "payment" với giá trị mặc định "pay in cash". Sau đó, chúng ta in ra kết quả của filtered_data.
+
+
+-------------------------------------------------------
+14. Tính tổng cộng cho cột Total theo nhóm BillingCountry
+
+```{r}
+
+
+# Truy vấn dữ liệu từ bảng invoices
+
+
+# Tính tổng cộng cho cột Total theo nhóm BillingCountry
+
+# In ra 6 hàng đầu tiên từ bảng summary_data
+print(head(summary_data))
+
+
+
+```
+```{r}
+# In ra dữ liệu từ bảng summary_data
+print(summary_data)
+```
+
+15 Vẽ biểu đồ
+```{r}
+# Vẽ biểu đồ thống kê
+
+
+```
+
+16. RÈN LUYỆN THÊM: thực hiện thống kê
+
+```{r}
+
+# Truy vấn dữ liệu từ bảng invoices
+
+
+# Tổng cộng của cột "Total"
+
+# In ra tổng doanh thu
+print(total_sales)
+```
+
+```{r}
+
+# Số lượng hóa đơn mỗi quốc gia
+
+
+# In ra số lượng hóa đơn mỗi quốc gia
+
+
+
+
+```
+
+
+```{r}
+# Tổng doanh thu theo quốc gia
+
+
+# In ra tổng doanh thu theo quốc gia
+
+
+
+```
+
+
+```{r}
+# Tổng doanh thu trung bình mỗi hóa đơn
+
+
+# In ra tổng doanh thu trung bình mỗi hóa đơn
+print(average_invoice_total)
+
+
+```
+```{r}
+# Số lượng hóa đơn theo tháng
+
+
+# In ra số lượng hóa đơn theo tháng
+
+```
+
+
+17. thống kê khách hàng của từng quốc gia nghe nhạc thể loại nào, Tính tổng doanh thu cho từng thể loại
+
+```{r}
+
+# Truy vấn dữ liệu từ các bảng cần thiết (invoices, invoice_items, customers, tracks, genres)
+
+
+# Kết hợp dữ liệu từ các bảng để lấy thông tin về quốc gia, thể loại nhạc và doanh thu
+
+
+# In ra dữ liệu thống kê
+print(customer_genre_revenue)
+
+```
+18. VẼ BIỂU ĐỒ 
+```{r}
+library(ggplot2)
+
+# Tạo biểu đồ pie cho từng quốc gia
+
+
+# Hiển thị biểu đồ
+print(pie_chart)
+
+
+```
+vẽ biểu đồ thống kê quốc gia nào sử dụng thể loại nhạc Blues, sử dụng dữ liệu đã được nhóm lại từ trước. 
+19 . VẼ BIỂU ĐỒ 
+```{r}
+library(ggplot2)
+
+# Lọc dữ liệu cho thể loại nhạc Blues
+
+
+# Tạo biểu đồ pie cho quốc gia sử dụng thể loại nhạc Blues
+
+
+# Hiển thị biểu đồ
+print(pie_chart_blues)
+
+```
+Mã này sẽ tạo ra một biểu đồ pie, trong đó mỗi phần tương ứng với một quốc gia, và kích thước của mỗi phần sẽ phản ánh tổng doanh thu của thể loại nhạc Blues trong quốc gia đó.
+
+```{r}
+# Đóng kết nối
+DBI::dbDisconnect(conn)
+```
+

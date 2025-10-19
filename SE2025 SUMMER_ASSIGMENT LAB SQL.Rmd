@@ -1,0 +1,381 @@
+---
+title: "R Notebook"
+auth: "Nguyen Xuan Huy - FTU - HCM"
+---
+
+# ASSIGMENT SQL
+
+## PACKAGES AND LIB
+
+```{r}
+install.packages("RJDBC")
+
+```
+
+```{r}
+system("apt-get install -y default-jdk")
+
+```
+
+#### JDBC driver (ex: MySQL, PostgreSQL..)
+
+```{r}
+library(RJDBC)
+
+```
+
+```{r}
+install.packages("DBI")
+
+```
+
+```{r}
+install.packages("RSQLite")
+```
+
+```{r}
+# Cài đặt RJDBC
+install.packages("RJDBC")
+
+
+
+```
+
+```{r}
+library(RJDBC)
+```
+
+```{r}
+# Khai báo JDBC driver
+drv <- JDBC("com.ibm.db2.jcc.DB2Driver", "C:/JavaR/jdbc_sqlj/db2jcc4.jar")
+
+
+```
+
+```{r}
+install.packages("RMySQL")
+```
+
+```{r}
+library(RSQLite)
+```
+
+## CONNECT DATABASE
+
+```{r}
+
+library(RJDBC)
+
+# Khai báo file jar của MySQL Connector/J
+jdbc_driver <- JDBC("com.mysql.cj.jdbc.Driver", "C:/JavaR/mysql-connector-j-9.0.0/mysql-connector-j-9.0.0.jar", identifier.quote="`")
+
+
+```
+
+```{r}
+# Tạo kết nối đến Xammp
+hostname <- None
+port <- None
+dbname <- None
+username <- None
+password <- None
+
+# Khai báo url conn
+url <- None
+
+# conn đến Database
+conn <- None
+
+# Test kết nối
+if (!is.null(conn)) {
+  print("Kết nối OK!")
+} else {
+  print("Kết nối không đượci!")
+}
+```
+
+
+## READ DATA
+
+```{r}
+# Đọc dữ liệu file CSV
+file_path <- None
+crime_data <- None
+
+head(crime_data)
+
+# Tổng quan dữ liệu (summary)
+summary(crime_data)
+```
+
+## IMPORT ChicagoCrimeData.CSV TO DATABADE
+
+```{r}
+# Nhập dữ liệu trực tiếp vào MySQL (bỏ qua NA)
+None
+
+```
+
+## TEST DATABASE (SQL)
+
+```{r}
+# Kiểm tra dữ liệu trong bảng MySQL
+None
+
+```
+
+### Problem 1
+
+**Total number of cases**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+
+```
+
+### Problem 2
+
+**Total number of cases by crime type**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+None
+
+# In kết quả
+print(result)
+```
+
+### Problem 3 **Total number of cases by year**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 4
+
+**Number of cases without arrests (Non-Arrest)**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 5
+
+**Total number of cases by community area**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 6
+
+Number of cases with missing location information
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 7
+
+**How does the trend of total crime incidents change over the years? Is there an increase or decrease?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+
+
+```
+
+### Problem 8
+
+**Which types of crimes are increasing or decreasing over time? Is there a specific type that is particularly prevalent in recent years?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 9
+
+**Which areas have a higher crime trend compared to others? Does this trend change over time?**
+
+```{r}
+query <- NoneORDER BY YEAR, Total_Crimes DESC;
+"
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 10
+
+**Is there a particular time of day (morning, afternoon, evening) when crimes are more likely to occur?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 11
+
+**Is the crime trend affected by the season of the year? Which season typically has the highest number of incidents?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 12
+
+**Which type of crime is the most prevalent in the entire dataset? What is the frequency of that type over the years?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 13
+
+**Which locations have the highest frequency of crimes? Are there any notable patterns or hotspots?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 14
+
+**Is there a correlation between total incidents and arrest frequency? What percentage of incidents result in arrests?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 15
+
+**Which community areas have the highest frequency of crimes? Does this frequency change over time?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 16
+
+**Which location descriptions have the highest frequency of crimes? Is there a difference between various location descriptions?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```
+
+### Problem 17
+
+**Which types of crimes are more prevalent in specific locations? Does this trend change over time?**
+
+```{r}
+query <- None
+
+# Thực hiện Query
+result <- None
+
+# In kết quả
+print(result)
+
+```

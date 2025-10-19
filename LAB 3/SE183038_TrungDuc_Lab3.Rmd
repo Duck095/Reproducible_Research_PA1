@@ -1,0 +1,255 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+install.packages(c("httr", "jsonlite"))
+```
+
+```{r}
+# install.packages(c("httr2","jsonlite","dplyr","lubridate"))
+
+library(httr2)
+library(jsonlite)
+library(dplyr)
+library(lubridate)
+```
+
+
+```{r}
+library(httr)
+```
+
+```{r}
+library(jsonlite)
+```
+
+# Cài đặt thông tin API
+
+```{r}
+# API key
+api_key <- "0b694efc8b4dffa83eb3fc0e3f9f2b96"
+
+# Thành phố
+city <- "Bien Hoa City" # Tìm kiếm trên openweathermap
+
+# URL endpoint OpenWeather (Current Weather Data)
+base_url <- "https://api.openweathermap.org/data/2.5/weather"
+```
+
+
+```{r}
+# Tạo GET request kèm query parameters
+library(httr)
+library(jsonlite)
+
+res <- GET(base_url,
+           query = list(q = city, 
+                        appid = api_key, 
+                        units = "metric",   # trả về °C
+                        lang = "vi"))       # ngôn ngữ tiếng Việt
+
+# Kiểm tra status code
+status_code(res) 
+
+```
+
+# Parse JSON response thành data frame
+
+```{r}
+# Nếu parse
+if (status_code(res) == 200) {
+  data <- content(res, as = "text", encoding = "UTF-8")
+  data <- fromJSON(data)
+  
+  # Lấy mô tả thời tiết từ data.frame
+  desc <- data$weather$description[1]
+  
+  weather_df <- data.frame(
+    city = data$name,
+    country = data$sys$country,
+    description = desc,
+    temp_c = data$main$temp,
+    feels_like_c = data$main$feels_like,
+    humidity = data$main$humidity,
+    wind_speed = data$wind$speed,
+    dt = as.POSIXct(data$dt, origin = "1970-01-01", tz = "UTC")
+  )
+  
+  print(weather_df)
+} else {
+  message("Request failed: ", status_code(res))
+}
+
+```
+
+
+```{r}
+# Tổng quan data
+summary(weather_df)
+```
+
+```{r}
+# xem thông tin 10 dòng dữ liệu đầu tiên
+head(weather_df, 10)
+```
+
+## API tại https://www.weatherapi.com/my/upgrade.aspx 
+
+```{r}
+# --- 1. Thông tin API ---
+api_key <- "0b694efc8b4dffa83eb3fc0e3f9f2b96"
+city    <- "Bien Hoa"
+```
+
+
+```{r}
+# --- 2. Hàm lấy dữ liệu dự báo 5 ngày/3 giờ ---
+get_forecast_5day <- function(city, api_key) {
+  url <- paste0(
+    "https://api.openweathermap.org/data/2.5/forecast?",
+    "q=", URLencode(city), ",VN&units=metric&appid=", api_key
+  )
+  resp <- request(url) |> req_perform()
+  resp_body_json(resp)
+}
+
+forecast_raw <- get_forecast_5day(city, api_key)
+
+# --- 3. Chuyển dữ liệu JSON thành bảng ---
+forecast_tbl2 <- bind_rows(lapply(forecast_raw$list, function(x) {
+  tibble(
+    datetime = as_datetime(x$dt),                 # thời gian dự báo
+    temp      = x$main$temp,                      # nhiệt độ trung bình (°C)
+    temp_min  = x$main$temp_min,
+    temp_max  = x$main$temp_max,
+    humidity  = x$main$humidity,                  # độ ẩm (%)
+    wind_kph  = x$wind$speed * 3.6,               # gió m/s → km/h
+    rain_mm   = ifelse(is.null(x$rain$`3h`), 0,   # lượng mưa 3h (mm)
+                       x$rain$`3h`),
+    weather   = x$weather[[1]]$description        # mô tả thời tiết
+  )
+}))
+
+# --- 4. Xem kết quả ---
+print(forecast_tbl2)
+```
+
+
+
+```{r}
+# Danh sách các thành phố cần lấy dữ liệu
+cities <- c(
+  "Thanh pho Ho Chi Minh",
+  "Ha Noi",
+  "Vinh",
+  "Dong Hoi",
+  "Hue",
+  "Quy Nhon",
+  "Nha Trang",
+  "Phan Thiet",
+  "Vung Tau",
+  "Ca Mau"
+)
+
+```
+
+```{r}
+# --- 2. Hàm lấy dữ liệu dự báo 5 ngày / 3 giờ ---
+get_forecast_5day <- function(city, api_key) {
+  url <- paste0(
+    "https://api.openweathermap.org/data/2.5/forecast?",
+    "q=", URLencode(city), ",VN&units=metric&appid=", api_key
+  )
+
+  resp <- request(url) |> req_perform()
+  raw <- resp_body_json(resp)
+
+  # Chuyển mỗi khối dự báo thành 1 hàng dữ liệu
+  bind_rows(lapply(raw$list, function(x) {
+    tibble (
+      city      = raw$city$name,                 # tên thành phố từ API
+      datetime  = as_datetime(x$dt),             # thời gian dự báo
+      temp      = x$main$temp,                   # nhiệt độ trung bình (°C)
+      temp_min  = x$main$temp_min,
+      temp_max  = x$main$temp_max,
+      humidity  = x$main$humidity,               # độ ẩm (%)
+      wind_kph  = x$wind$speed * 3.6,            # gió m/s -> km/h
+      rain_mm   = ifelse(is.null(x$rain$`3h`), 0,# lượng mưa 3h (mm)
+                         x$rain$`3h`),
+      weather   = x$weather[[1]]$description     # mô tả thời tiết
+    )
+  }))
+}
+
+# --- 3. Lấy dữ liệu cho tất cả các thành phố và gộp lại ---
+forecast_all <- bind_rows(lapply(cities, function(ct) get_forecast_5day(ct, api_key)))
+
+# --- 4. Xem vài dòng kết quả ---
+head(forecast_all, 10)
+
+
+```
+
+
+
+```{r}
+library(ggplot2)
+
+ggplot(forecast_all, aes(x = city, y = rain_mm)) +
+  geom_boxplot(fill = "skyblue", colour = "darkblue") +
+  labs(
+    title = "Phân bố lượng mưa dự báo 5 ngày / 3 giờ",
+    x = "Thành phố",
+    y = "Lượng mưa 3 giờ (mm)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1) # xoay nhãn trục X
+  )
+
+```
+
+
+```{r}
+ggplot(forecast_all, aes(x = city, y = rain_mm)) +
+  geom_jitter(width = 0.3, height = 0,      # rải điểm ngang để tránh chồng lấn
+              color = "steelblue", size = 2, alpha = 0.7) +
+  labs(
+    title = "Biểu đồ phân tán lượng mưa 5 ngày / 3 giờ",
+    x = "Thành phố",
+    y = "Lượng mưa 3 giờ (mm)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # xoay nhãn trục X
+  )
+
+
+```
+
+
+```{r}
+
+forecast_all %>%
+  filter(grepl("Ho Chi Minh", city, ignore.case = TRUE) | 
+           grepl("Thanh pho Ho Chi Minh", city, ignore.case = TRUE)) %>%        # chỉ lấy TP HCM
+  ggplot(aes(x = datetime, y = rain_mm)) +
+  geom_point(color = "darkred", size = 2, alpha = 0.7) +
+  geom_line(color = "grey50", linewidth = 0.5) + # vẽ đường nối để dễ theo dõi xu hướng
+  labs(
+    title = "Lượng mưa dự báo 5 ngày / 3 giờ – Ho Chi Minh City",
+    x = "Thời gian dự báo",
+    y = "Lượng mưa 3 giờ (mm)"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)  # xoay nhãn trục X cho dễ đọc
+  )
+
+
+```
+
+
+

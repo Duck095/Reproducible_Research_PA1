@@ -1,0 +1,206 @@
+---
+title: "WORKING WITH DATABASES MýQL"
+output: html_notebook
+Edit: Ms Nguyen Xuan Huy - FPTU HCM
+---
+Demo: Kết nối CSDL và tạo 1 bảng
+---------------------------------------------------
+1. Kết nối đến cơ sở dữ liệu.
+2. Tạo bảng mới với các cột và khóa chính/phụ cần thiết.
+3. Thêm dữ liệu vào bảng.
+4. Kiểm tra dữ liệu đã thêm.
+-----------------------------------------------------------
+
+#1. kết nối đến cơ sở dữ liệu MySQL chạy trên XAMPP
+
+## Cài đặt packages:
+```{r}
+install.packages("DBI")
+install.packages("RMySQL")
+install.packages("RMariaDB")
+```
+
+## cập nhật library
+```{r}
+library(DBI)
+library(RMySQL)
+library(RMariaDB)
+```
+
+## Thiết lập thông tin kết nối đến server
+```{r}
+# Thiết lập thông tin kết nối
+host <- "127.0.0.1"
+post <- 3306
+dbname <- "FPT"
+user <- "Duck"
+password = "Trungduc09052004"
+```
+
+```{r}
+# Tạo kết nối đến cơ sở dữ liệu
+con <- dbConnect(RMySQL::MySQL(),
+                 host = host,
+                 post = post,
+                 dbname = dbname,
+                 user = user,
+                 password = password)
+conn <- tryCatch({
+  dbConnect(RMariaDB::MariaDB(),
+            dbname = dbname,
+            host = host,
+            post = post,
+            user = user,
+            password = password)
+}, error = function(e) {
+  stop("Không thể kết nối đến dữ liệu:" ,e$message)
+})
+# Kiểm tra kết nối
+
+if(!dbIsValid(conn)){
+  stop("không thể kết nối đến cơ sở dữ liệu")
+} else {
+  print("Kết nối thành công ")
+}
+```
+- Sử dụng hàm dbExecute để thực thi câu lệnh SQL tạo bảng mới và thêm dữ liệu vào bảng.
+- khai báo cột khóa chính và cột khóa phụ:
+ 
+```{r}
+# Tạo bảng nhân viên
+dbExecute(conn, "
+    CREATE TABLE employee (
+        SupportRepID INT NOT NULL AUTO_INCREMENT,
+        Firstname VARCHAR(255),
+        Lastname VARCHAR(255),
+        Department VARCHAR(255),
+        Phone VARCHAR(20),
+        Email VARCHAR(255),
+        PRIMARY KEY (SupportRepID))
+")
+
+print("Tạo bảng nhân viên thành công")
+```
+
+
+```{r}
+# Thêm dữ liệu vào bảng
+dbExecute(conn, "
+  INSERT INTO employee (
+    SupportRepId, FirstName, LastName, Department, Phone, Email)
+      VALUES
+      (1, 'Triệu Văn', 'QUang', 'Kinh doanh', '07856643a435', 'quang@gmail.com'),
+      (2, 'Nguyễn Việt', 'Thnah', 'Mảketing', '044457224872', 'thanh@gmail.com'),
+      (3, 'Trân Thanh', 'Tài', 'Sale', '094a7845454', 'tài@gmail.com'),
+      (4, 'Quản văn', 'Binh', 'Tư vấn', '0872312312121', 'hai@gmail.com'),
+      (5, 'Vũ văn', 'Hải', 'Giám đốc', '07213242 54', 'hoa@gmail.com')"
+  )
+
+```
+
+```{r}
+# Kiểm tra dữ liệu đã thêm
+result <- dbGetQuery(conn, "SELECT * FROM employee")
+print(result)
+```
+
+```{r}
+# Tạo bảng mới
+dbExecute(conn, "
+  CREATE TABLE customer_info (
+    CustomerId INT NOT NULL AUTO_INCREMENT,
+    FirstName VARCHAR(255),
+    LastName VARCHAR(255),
+    Company VARCHAR(255),
+    Address VARCHAR(255),
+    City VARCHAR(255),
+    State VARCHAR(255),
+    Title VARCHAR(255),
+    PostalCode VARCHAR(255),
+    Phone VARCHAR(255),
+    Fax VARCHAR(255),
+    Email VARCHAR(255),
+    SupportRepId INT,
+    PRIMARY KEY (CustomerId),
+    FOREIGN KEY (SupportRepId) REFERENCES employee (SupportRepId)
+  )"
+)
+
+print("Tạo bảng thành công")
+```
+
+
+```{r}
+# Thêm dữ liệu vào bảng
+dbExecute(conn, "
+  INSERT INTO customer_info (FirstName, LastName, Company, Address, City, State, Title, PostalCode, Phone, Fax, Email, SupportRepId)
+  VALUES
+  ('Nguyễn Xuân', 'Huy', 'FPTU HCM', 'Phú Hữu', 'Thủ Đức', 'Đồng Nai', 'Giảng viên', '7000000', '078566433435', '078566433435', 'huy@gmail.com', 1),
+  ('Đường Trân', 'Toàn', 'Thép Quốc Thái', 'Nam Long', 'Long An', 'Long An', 'Tổng GĐ', '6000000', '0644572242', '0644572242', 'toan@gmail.com', 2),
+  ('Khiếu Hoàng', 'Lâm', 'VCB HCM', 'Thủ Đức', 'Biên Hòa', 'Đồng Nai', 'Nhân viên', '5000000', '0947845454', '0947845454', 'lam@gmail.com', 3),
+  ('Chu Thị', 'Nhường', 'HUTECH', 'Thủ Đức', 'Thủ Dầu Một', 'HCM', 'Nhân viên kế toán', '7000010', '08723112121', '08723112121', 'nhuong@gmail.com', 4),
+  ('Nguyễn Văn', 'Hòa', 'An Khang', 'HCM', 'Trảng Bàng', 'Tây Ninh', 'Kinh doanh', '6000000', '0721242545454', '0721242545454', 'hoa@gmail.com', 5)
+")
+
+print("Thêm dữ liệu vào bảng thành công")
+```
+
+
+```{r}
+# Kiểm tra dữ liệu đã thêm
+result <- dbGetQuery(conn, "SELECT * FROM employee")
+print(result)
+result2 <- dbGetQuery(conn, "SELECT * FROM customer_info")
+print(result2)
+
+```
+
+Xóa dữ liệu trùng lặp trong 1 bảng:
+```{r}
+# Xóa dữ liệu trùng lặp
+
+
+print("Dữ liệu trùng lặp đã được xóa thành công")
+```
+------------------------------------------------------------
+1. Kiểm tra trùng lặ: sử dụng lệnh SELECT để đánh số hàng (ROW_NUMBER()) cho mỗi dòng dữ liệu dựa trên các trường dữ liệu cần kiểm tra trùng lặp.
+
+2. SỬ dụng lệnh DELETE để xóa các bản ghi có ROW_NUMBER() lớn hơn 1, tức là giữ lại chỉ một bản ghi duy nhất cho mỗi dòng dữ liệu trùng lặp.
+-----------------------------------------------------------------
+
+```{r}
+# Kiểm tra dữ liệu đã thêm
+result <- dbGetQuery(conn, "SELECT * FROM customer_info")
+print(result)
+
+```
+
+Để kiểm tra mối quan hệ giữa các bảng trong cơ sở dữ liệu
+sử dụng lệnh SQL JOIN. để kiểm tra kết nối giữa các bảng customer_info và employee sử dụng trường SupportRepId là khóa chính và khóa phụ
+
+```{r}
+# Truy vấn để hiển thị danh sách các bảng
+
+# Thực hiện truy vấn
+
+
+# In kết quả
+
+
+
+```
+
+
+
+XÓa dữ liệu trùng lặp
+
+```{r}
+DELETE FROM customer_info
+WHERE ROWID NOT IN (
+    SELECT MIN(ROWID)
+    FROM customer_info
+    GROUP BY FirstName, LastName, Company, Address, City, State, Title, PostalCode, Phone, Fax, Email, SupportRepId
+);
+
+```
+
