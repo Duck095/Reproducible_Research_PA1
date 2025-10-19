@@ -1,0 +1,159 @@
+---
+title: "Reproducible Research: Peer Assessment 1"
+author: "Tran Trung Duc"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+This project analyzes personal activity monitoring data collected in 5-minute intervals throughout the day.  
+The dataset contains two months of data (October–November 2012) and records the number of steps taken in each interval.  
+We will explore total daily steps, average daily patterns, handle missing data, and compare weekday vs weekend activity.
+
+---
+
+# Loading and Preprocessing the Data
+```{r load-data}
+activity <- read.csv("activity.csv")
+activity$date <- as.Date(activity$date, format="%Y-%m-%d")
+
+str(activity)
+summary(activity)
+```
+
+---
+
+# 1. What is mean total number of steps taken per day?
+```{r total-steps-per-day}
+library(dplyr)
+total_steps <- activity %>%
+  group_by(date) %>%
+  summarise(total = sum(steps, na.rm = TRUE))
+```
+
+## Histogram
+```{r hist-total-steps, fig.width=7, fig.height=5}
+hist(total_steps$total,
+     main="Histogram of Total Steps per Day",
+     xlab="Total Steps per Day",
+     col="steelblue", border="white")
+```
+
+## Mean and Median
+```{r mean-median}
+mean_steps <- mean(total_steps$total, na.rm=TRUE)
+median_steps <- median(total_steps$total, na.rm=TRUE)
+mean_steps; median_steps
+```
+
+---
+
+# 2. What is the average daily activity pattern?
+```{r avg-daily-pattern}
+interval_avg <- activity %>%
+  group_by(interval) %>%
+  summarise(mean_steps = mean(steps, na.rm = TRUE))
+```
+
+## Time Series Plot
+```{r time-series, fig.width=7, fig.height=5}
+plot(interval_avg$interval, interval_avg$mean_steps, type="l",
+     main="Average Daily Activity Pattern",
+     xlab="5-minute Interval",
+     ylab="Average Steps",
+     col="darkred", lwd=2)
+```
+
+## Interval with Maximum Average Steps
+```{r max-interval}
+interval_avg[which.max(interval_avg$mean_steps), ]
+```
+
+---
+
+# 3. Imputing Missing Values
+```{r count-na}
+sum(is.na(activity$steps))
+```
+
+We fill missing values using the mean for that 5-minute interval.
+
+```{r impute-na}
+activity_filled <- activity
+for (i in 1:nrow(activity_filled)) {
+  if (is.na(activity_filled$steps[i])) {
+    interval_id <- activity_filled$interval[i]
+    activity_filled$steps[i] <- interval_avg$mean_steps[interval_avg$interval == interval_id]
+  }
+}
+sum(is.na(activity_filled$steps))
+```
+
+---
+
+# 4. Histogram (After Imputation)
+```{r total-after-impute}
+total_steps_filled <- activity_filled %>%
+  group_by(date) %>%
+  summarise(total = sum(steps))
+
+hist(total_steps_filled$total,
+     main="Histogram of Total Steps per Day (Imputed)",
+     xlab="Total Steps per Day",
+     col="darkgreen", border="white")
+```
+
+## Mean and Median (After Imputation)
+```{r mean-median-imputed}
+mean_filled <- mean(total_steps_filled$total)
+median_filled <- median(total_steps_filled$total)
+data.frame(Before_Mean=mean_steps, After_Mean=mean_filled,
+           Before_Median=median_steps, After_Median=median_filled)
+```
+
+---
+
+# 5. Are there differences in activity patterns between weekdays and weekends?
+```{r weekday-weekend}
+activity_filled$daytype <- ifelse(weekdays(activity_filled$date) %in% c("Saturday","Sunday"),
+                                  "weekend","weekday")
+activity_filled$daytype <- as.factor(activity_filled$daytype)
+
+avg_daytype <- activity_filled %>%
+  group_by(interval, daytype) %>%
+  summarise(mean_steps = mean(steps))
+```
+
+## Panel Plot
+```{r panel-plot, fig.width=7, fig.height=6}
+library(lattice)
+xyplot(mean_steps ~ interval | daytype, data=avg_daytype, type="l",
+       layout=c(1,2),
+       main="Average Steps per Interval: Weekday vs Weekend",
+       xlab="Interval", ylab="Average Steps",
+       col="blue", lwd=2)
+```
+
+---
+
+# Conclusion
+- The mean total steps per day ≈ `r round(mean_filled,2)`.  
+- Imputing missing values does not greatly change the overall distribution.  
+- Weekday activity peaks earlier, while weekend activity shifts later in the day.  
+- The dataset confirms strong daily and weekly patterns in human movement.
+
+---
+
+# Appendix
+All code and results are reproducible.  
+Repository contents:
+```
+PA1_template.Rmd
+PA1_template.html
+PA1_template.md
+figure/
+```
